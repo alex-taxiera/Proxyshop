@@ -1,0 +1,92 @@
+name: Build Dev Version and Release
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  DEV_USERNAME: "alex-taxiera"
+  DEV_TAG: "do-not-checkout"
+  DEV_NAME: "Development Rolling Release"
+  DEV_BODY: |
+    This is an UNOFFICIAL development rolling release of Proxyshop.
+    It is not intended for production use and may contain bugs or incomplete features. Please use at your own risk.
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    outputs:
+      dev_username: ${{ steps.username.outputs.dev_username }}
+      short_sha: ${{ steps.short_sha.outputs.short_sha }}
+    steps:
+      - name: Set DEV_USERNAME output 
+        id: username
+        run: |
+          echo "dev_username=${{ env.DEV_USERNAME }}" >> $GITHUB_OUTPUT
+
+      - name: Set SHORT_SHA output 
+        id: short_sha
+        run: |
+          echo "short_sha=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+  build:
+    runs-on: windows-2025
+    needs: init
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          docker compose up --build
+          docker cp proxyshop-builder-1:/usr/src/app/dist ./dist
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./dist/
+          name: Proxyshop-dev-${{ needs.init.outputs.short_sha }}
+          retention-days: 1
+
+  release:
+    runs-on: ubuntu-latest
+    needs:
+      - init
+      - build
+    if: ${{ github.repository_owner == needs.init.outputs.dev_username }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: "Download build"
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: Proxyshop-dev-${{ needs.init.outputs.short_sha }}
+          path: ./build
+
+      - name: Delete old release
+        uses: cb80/delrel@latest
+        with:
+          tag: ${{ env.DEV_TAG }}
+
+      - name: Advance dev tag to main
+        run: |
+          git tag ${{ env.DEV_TAG }} -f
+          git push --tags -f "https://${{ needs.init.outputs.dev_username }}:$GITHUB_TOKEN@github.com/${{ needs.init.outputs.dev_username }}/Proxyshop.git"
+
+      - name: Zip build folder
+        run: |
+          cd ./build
+          zip -r ./Proxyshop-dev-${{ needs.init.outputs.short_sha }}.zip *
+
+      - name: Create new release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.DEV_TAG }}
+          name: ${{ env.DEV_NAME }}
+          body: ${{ env.DEV_BODY }}
+          draft: false
+          prerelease: true
+          files: ./build/Proxyshop-dev-${{ needs.init.outputs.short_sha }}.zip

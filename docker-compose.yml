@@ -1,0 +1,12 @@
+services:
+  builder:
+    volumes:
+      - .\src:C:\usr\src\app\src
+    build:
+      context: .
+    command: powershell.exe -C "Invoke-Expression (poetry env activate); pyinstaller -n Proxyshop --onefile main.py"
+
+# run this command to build the exe
+# docker compose up --build
+# then copy the exe with this
+# docker cp proxyshop-builder-1:/usr/src/app/dist ./
