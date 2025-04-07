@@ -16,13 +16,10 @@ COPY main.py __VERSION__.py ./
 COPY src ./src
 
 # set up dist folder
-COPY art ./dist/art
 COPY fonts ./dist/fonts
-COPY out ./dist/out
 COPY plugins ./dist/plugins
-COPY templates ./dist/templates
 COPY README.md LICENSE.md pyproject.toml ./dist/
 
-#COPY src/data ./dist/src/data
-#COPY src/img ./dist/src/img
+COPY src/data ./dist/src/data
+COPY src/img ./dist/src/img
 
