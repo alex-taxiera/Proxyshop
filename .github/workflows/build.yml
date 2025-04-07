@@ -28,7 +28,9 @@ jobs:
         run: |
           cp -r fonts ./dist/fonts
           cp -r plugins ./dist/plugins
-          cp README.md LICENSE.md pyproject.toml ./dist
+          cp README.md ./dist
+          cp LICENSE.md ./dist
+          cp pyproject.toml ./dist
           cp src/data ./dist/src/data
           cp src/img ./dist/src/img
 
