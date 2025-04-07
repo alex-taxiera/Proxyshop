@@ -5,6 +5,7 @@ description = "Photoshop automation tool for generating high quality Magic the G
 authors = ["Investigamer <freethoughtleft@gmail.com>"]
 license = "MPL-2.0"
 readme = "README.md"
+package-mode = false
 keywords = ["proxyshop", "proxy", "mtg", "magic", "gathering", "cards", "photoshop", "magic the gathering", "playtest"]
 
 [tool.poetry.urls]

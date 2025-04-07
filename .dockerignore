@@ -1,0 +1,40 @@
+# User defined data
+/src/data/user.yml
+# User specific version tracker
+/src/data/versions.yml
+# User defined environment
+/src/data/env.yml
+# Default environment file
+/src/data/env.default.yml
+
+
+# User generated config files
+/config.ini
+/src/data/config_ini
+
+/src/img/symbols
+/src/data/hexproof
+
+# All plugins that aren't MrTeferi or SilvanMTG
+/plugins/*
+!/plugins/Investigamer
+!/plugins/SilvanMTG
+/plugins/*/config_ini
+# PSD templates directories
+/templates/*
+!/templates/tools
+/plugins/*/templates/*
+
+
+# Ignore Git files
+.git/
+.gitignore
+
+
+# Ignore build artifacts
+dist/
+build/
+
+art/
+out/
+logs/
