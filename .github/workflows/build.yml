@@ -38,7 +38,7 @@ jobs:
           pyinstaller -n Proxyshop --onefile main.py
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: ./dist/
           name: Proxyshop-dev-{{ github.run_number }}
