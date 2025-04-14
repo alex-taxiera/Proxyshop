@@ -37,7 +37,7 @@ click = "^8.1.7"
 tomli = "^2.0.1"
 yarl = "^1.9.3"
 pydantic = "^2.5.2"
-omnitils = "^1.4.4"
+omnitils = { git = "https://github.com/pappnu/omnitils.git", branch = "fix-gdrive-download" }
 dynaconf = {extras = ["yaml"], version = "^3.2.6"}
 hexproof = "^0.3.7"
 rich = "^13.8.1"
