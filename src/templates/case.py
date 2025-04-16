@@ -131,7 +131,11 @@ class CaseMod(NormalTemplate):
         # Core vars
         spacing = self.app.scale_by_dpi(80)
         spaces = len(self.line_layers)
-        divider_height = get_layer_height(self.divider_layers[0])
+        divider_height = (
+            get_layer_height(self.divider_layers[0])
+            if len(self.divider_layers) > 0
+            else 0
+        )
         ref_height: float | int = self.textbox_reference.dims["height"]
         spacing_total = (spaces * (spacing + divider_height)) + (spacing * 2)
         total_height = ref_height - spacing_total
@@ -157,6 +161,9 @@ class CaseMod(NormalTemplate):
         )
 
         # Position a divider between each ability line
-        position_dividers(
-            dividers=self.divider_layers, layers=self.line_layers, docref=self.docref
-        )
+        if len(self.divider_layers) == len(self.line_layers) - 1:
+            position_dividers(
+                dividers=self.divider_layers,
+                layers=self.line_layers,
+                docref=self.docref,
+            )
