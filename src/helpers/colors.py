@@ -220,7 +220,11 @@ def get_pinline_gradient(
     if len(colors) == 1:
         return color_map.get(colors, [0, 0, 0])
 
-    if (len_colors := len(colors)) > 1 and colors not in [LAYERS.LAND, LAYERS.GOLD]:
+    if (len_colors := len(colors)) > 1 and colors not in [
+        LAYERS.ARTIFACT,
+        LAYERS.LAND,
+        LAYERS.GOLD,
+    ]:
         return [
             conf
             for i in range(len_colors - 1)
