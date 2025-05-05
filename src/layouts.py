@@ -1191,12 +1191,16 @@ class ClassLayout(NormalLayout):
     @cached_property
     def class_text(self) -> str:
         """Text comprised of class ability lines."""
-        return strip_lines(self.oracle_text, 1)
+        return (
+            self.oracle_text
+            if CFG.remove_reminder
+            else strip_lines(self.oracle_text, 1)
+        )
 
     @cached_property
     def class_description(self) -> str:
         """Description at the top of the Class card."""
-        return get_line(self.oracle_text, 0)
+        return "" if CFG.remove_reminder else get_line(self.oracle_text, 0)
 
     @cached_property
     def class_lines(self) -> list[dict]:
