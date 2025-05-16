@@ -1174,7 +1174,10 @@ class SagaLayout(NormalLayout):
     @cached_property
     def saga_description(self) -> str:
         """Description at the top of the Saga card"""
-        return "" if CFG.remove_reminder else get_line(self.oracle_text, 0)
+        if CFG.remove_reminder:
+            return ""
+        line = get_line(self.oracle_text, 0)
+        return "" if self._chapter_regex.match(line) else line
 
     @cached_property
     def saga_lines(self) -> list[dict]:
