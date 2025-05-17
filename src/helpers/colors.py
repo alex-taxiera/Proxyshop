@@ -216,15 +216,12 @@ def get_pinline_gradient(
 
     # Return our colors
     if not colors:
-        return color_map.get('Artifact', [0, 0, 0])
-    if len(colors) == 1:
-        return color_map.get(colors, [0, 0, 0])
+        return color_map.get(LAYERS.ARTIFACT, [0, 0, 0])
 
-    if (len_colors := len(colors)) > 1 and colors not in [
-        LAYERS.ARTIFACT,
-        LAYERS.LAND,
-        LAYERS.GOLD,
-    ]:
+    if colors in color_map:
+        return color_map[colors]
+
+    if (len_colors := len(colors)) > 1:
         return [
             conf
             for i in range(len_colors - 1)
@@ -242,7 +239,7 @@ def get_pinline_gradient(
             ]
         ]
 
-    return color_map.get(colors, [0, 0, 0])
+    return [0, 0, 0]
 
 
 """
