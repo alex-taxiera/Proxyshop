@@ -9,6 +9,7 @@ from typing import Optional, Union, TypedDict, Any
 
 # Third Party Imports
 from omnitils.strings import normalize_str
+from mtgsdk import Card
 import yarl
 
 # Local Imports
@@ -171,6 +172,14 @@ def process_card_data(data: dict, card: CardDetails) -> dict:
     """
     # Define a normalized name
     name_normalized = normalize_str(card['name'], no_space=True)
+    
+    # Fetch the original text from mtg-api if requested
+    if card.get('additional_cfg', {}).get('as_printed', False):
+        if mtg_api_card := Card.find(data['multiverse_ids'][0]):
+            if mtg_api_card.original_text:
+                data['oracle_text'] = mtg_api_card.original_text
+            if mtg_api_card.original_type:
+                data['type_line'] = mtg_api_card.original_type
 
     # Modify meld card data to fit transform layout
     if data['layout'] == 'meld':
