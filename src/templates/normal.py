@@ -1662,14 +1662,14 @@ class BorderlessVectorTemplate(
         ]
 
     @cached_property
-    def crown_shape(self) -> Union[LayerObjectTypes, list[LayerObjectTypes], None]:
+    def crown_shape(self) -> Optional[LayerSet]:
         """Vector shape for Legendary Crown."""
-        if not self.is_legendary:
-            return []
-        return [psd.getLayer(
-            LAYERS.NICKNAME if self.is_nickname else LAYERS.NORMAL,
+        if not self.is_legendary or not self.is_nickname: # Only return if Legendary and Nickname
+            return None
+        return psd.getLayerSet(
+            LAYERS.NICKNAME,
             [self.crown_group, LAYERS.SHAPE]
-        )]
+        )
 
     """
     * Masks
