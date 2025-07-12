@@ -30,6 +30,7 @@ class LayoutCategory(StrConstant):
     Prototype = 'Prototype'
     Saga = 'Saga'
     Split = 'Split'
+    Station = 'Station'
     Token = 'Token'
     Transform = 'Transform'
 
@@ -54,6 +55,7 @@ class LayoutType(StrConstant):
     Prototype = 'prototype'
     Saga = 'saga'
     Split = 'split'
+    Station = 'station'
     TransformBack = 'transform_back'
     TransformFront = 'transform_front'
 
@@ -89,6 +91,7 @@ class LayoutScryfall(StrConstant):
     Planeswalker = 'planeswalker'
     PlaneswalkerMDFC = 'planeswalker_mdfc'
     PlaneswalkerTransform = 'planeswalker_tf'
+    Station = 'station'
 
 
 """Maps Layout categories to a list of equivalent Layout types."""
@@ -108,7 +111,8 @@ layout_map_category: dict[LayoutCategory, list[LayoutType]] = {
     LayoutCategory.Leveler: [LayoutType.Leveler],
     LayoutCategory.Split: [LayoutType.Split],
     LayoutCategory.Battle: [LayoutType.Battle],
-    LayoutCategory.Planar: [LayoutType.Planar]
+    LayoutCategory.Planar: [LayoutType.Planar],
+    LayoutCategory.Station: [LayoutType.Station],
 }
 
 """Maps Layout types to their equivalent Layout category."""

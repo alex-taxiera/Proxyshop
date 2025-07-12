@@ -234,6 +234,10 @@ def process_card_data(data: dict, card: CardDetails) -> dict:
     if 'Saga' in type_line and 'Creature' in type_line:
         data['layout'] = 'saga'
 
+    # Check for Station layout
+    if 'STATION ' in data.get('oracle_text', ''):
+        data['layout'] = 'station'
+
     # Return updated data
     return data
 
