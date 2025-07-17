@@ -76,6 +76,7 @@ class LAYERS (StrConstant):
     FULL = 'Full'
     NORMAL = 'Normal'
     SNOW = 'Snow'
+    LEVEL = 'Level'
 
     # Borders
     BORDER = 'Border'
@@ -252,3 +253,7 @@ class LAYERS (StrConstant):
     # Battles
     DEFENSE = 'Defense'
     DEFENSE_REFERENCE = 'Defense Reference'
+
+    # Station
+    STATION = 'Station'
+    REQUIREMENT = 'Requirement'
