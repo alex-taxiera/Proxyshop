@@ -465,6 +465,10 @@ class FormattedTextField (TextField):
         return self.kwargs.get('flavor_centered', self.contents_centered)
 
     @cached_property
+    def vertically_centered(self) -> bool:
+        return self.kwargs.get('vertically_centered', True)
+
+    @cached_property
     def bold_rules_text(self) -> bool:
         return self.kwargs.get('bold_rules_text', False)
 
@@ -784,7 +788,8 @@ class FormattedTextArea (FormattedTextField):
 
         # Ensure the layer is centered vertically
         dims = get_layer_dimensions(self.layer)
-        self.layer.translate(0, self.reference_dims['center_y'] - dims['center_y'])
+        if self.vertically_centered:
+            self.layer.translate(0, self.reference_dims['center_y'] - dims['center_y'])
 
         # Ensure the layer is centered horizontally if needed
         if self.contents_centered and self.flavor_centered:
