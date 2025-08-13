@@ -4,7 +4,7 @@
 # Standard Library Imports
 from datetime import date, datetime
 import re
-from typing import NotRequired, Optional, Match, TypedDict, Union, Type, ForwardRef
+from typing import NotRequired, Optional, Match, TypedDict, Union, Type
 from os import path as osp
 from pathlib import Path
 from functools import cached_property
@@ -17,6 +17,7 @@ from src import CFG, CON, CONSOLE, ENV, PATH
 from src.cards import CardDetails, FrameDetails, get_card_data, parse_card_info, process_card_data
 from src.console import msg_error, msg_success
 from src.utils.hexapi import get_watermark_svg, get_watermark_svg_from_set
+from src.utils.manual_actions import manually_modify_dict
 from src.utils.scryfall import get_cards_oracle
 from src.enums.layers import LAYERS
 from src.enums.mtg import (
@@ -47,7 +48,7 @@ class PowerToughness(TypedDict):
 """
 
 
-def assign_layout(filename: Path) -> str | ForwardRef('CardLayout'):
+def assign_layout(filename: Path) -> "str | CardLayout":
     """Assign layout object to a card.
 
     Args:
@@ -72,6 +73,14 @@ def assign_layout(filename: Path) -> str | ForwardRef('CardLayout'):
     scryfall = get_card_data(card, cfg=CFG, logger=CONSOLE)
     if not scryfall:
         return msg_error(name_failed, reason="Scryfall search failed")
+    
+    if CFG.get_setting('BASE.TEMPLATES', 'Manually.Edit.Card.Data', default=False):
+        try:
+            scryfall = manually_modify_dict(scryfall, CFG.manual_text_editor)
+        except Exception as e:
+            CONSOLE.log_exception(e)
+            return msg_error(name_failed, reason="Manual card data modification failed")
+
     scryfall = process_card_data(scryfall, card)
 
     # Instantiate layout object
