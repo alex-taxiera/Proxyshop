@@ -74,7 +74,7 @@ def assign_layout(filename: Path) -> "str | CardLayout":
     if not scryfall:
         return msg_error(name_failed, reason="Scryfall search failed")
     
-    if CFG.get_setting('BASE.TEMPLATES', 'Manually.Edit.Card.Data', default=False):
+    if CFG.manually_edit_card_data:
         try:
             scryfall = manually_modify_dict(scryfall, CFG.manual_text_editor)
         except Exception as e:
