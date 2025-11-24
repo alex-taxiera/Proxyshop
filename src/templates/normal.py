@@ -1577,9 +1577,16 @@ class BorderlessVectorTemplate(
     def text_layer_nickname(self) -> Optional[ArtLayer]:
         """Card nickname text layer, allow support for Nickname."""
         if self.nickname:
-            layer = psd.getLayer(LAYERS.NAME, self.text_group)
-            layer.textItem.contents = "ENTER NAME HERE"
-            return layer
+            name = regular_name = psd.getLayer(LAYERS.NAME, self.text_group)
+            shifted_name = psd.getLayer(LAYERS.NAME_SHIFT, self.text_group)
+            if self.is_name_shifted:
+                regular_name.visible = False
+                shifted_name.visible = True
+                name = shifted_name
+
+            name.textItem.contents = "ENTER NAME HERE"
+            return name
+
         return None
 
     """
