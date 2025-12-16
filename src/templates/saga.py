@@ -46,6 +46,7 @@ class SagaMod (NormalTemplate):
     * Layout Checks
     """
 
+    @cached_property
     def is_layout_saga(self) -> bool:
         """Checks whether the card matches SagaLayout."""
         return isinstance(self.layout, SagaLayout)
