@@ -755,7 +755,7 @@ class BaseTemplate:
     * Loading Artwork
     """
 
-    @auto_prop_cached
+    @cached_property
     def art_file(self) -> Path:
         """Path to the art file to load."""
         art_file = self.layout.file.get('additional_cfg', {}).get('art', None)
