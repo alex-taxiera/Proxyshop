@@ -97,7 +97,10 @@ def parse_render_spec(file_path: Path) -> RenderSpec:
         ) -> CardSpec:
             if isinstance(config, RenderConfiguration):
                 config = config.spec
-            return CardSpec(card.spec + f" {config}", card.actual_path)
+            return CardSpec(
+                card.spec + f" {config}",
+                card.actual_path,
+            )
 
         def append_card(card_spec: CardSpec):
             spec, path = astuple(card_spec)
@@ -138,8 +141,11 @@ def parse_render_spec(file_path: Path) -> RenderSpec:
                 ended_group = groups.pop()
                 ended_group = [append_config(c, group_spec) for c in ended_group]
 
-                def expand_variable(card, variable, value):
-                    return (card[0].replace(variable, str(value)), card[1])
+                def expand_variable(card: CardSpec, variable: str, value: str | int):
+                    return CardSpec(
+                        card.spec.replace(variable, str(value)),
+                        card.actual_path,
+                    )
 
                 if groups:
                     # Replace special variables
