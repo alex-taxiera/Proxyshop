@@ -10,6 +10,7 @@ import glob
 import re as regex
 from pathlib import Path
 from typing import Dict, TypedDict
+from dataclasses import dataclass, astuple
 
 # Local Imports
 from src.cards import CardDetails, parse_card_info
@@ -19,9 +20,16 @@ from src.cards import CardDetails, parse_card_info
 """
 
 
-class RenderConfiguration(TypedDict):
+@dataclass
+class RenderConfiguration:
     name: str
-    info: str
+    spec: str
+
+
+@dataclass
+class CardSpec:
+    spec: str
+    actual_path: str | None
 
 
 class RenderSpec(TypedDict):
@@ -64,11 +72,11 @@ def parse_render_spec(file_path: Path) -> RenderSpec:
     # Find all the configurations first
     configs = {}
     for l in config_lines:
-        [config_name, config_info] = map(str.strip, l.split(":"))
-        configs[config_name] = {
-            "name": config_name,
-            "info": config_info,
-        }
+        [config_name, config_spec] = map(str.strip, l.split(":"))
+        configs[config_name] = RenderConfiguration(
+            name=config_name,
+            spec=config_spec,
+        )
 
     # Now find all the cards and parse them by using the configs
     cards = []
@@ -84,11 +92,15 @@ def parse_render_spec(file_path: Path) -> RenderSpec:
         parts = list(map(str.strip, l.split("|")))
         spec_base = parts[0]
 
-        def append_config(card, config):
-            return (card[0] + f" {config}", card[1])
+        def append_config(
+            card: CardSpec, config: RenderConfiguration | str
+        ) -> CardSpec:
+            if isinstance(config, RenderConfiguration):
+                config = config.spec
+            return CardSpec(card.spec + f" {config}", card.actual_path)
 
-        def append_card(card_spec):
-            spec, path = card_spec
+        def append_card(card_spec: CardSpec):
+            spec, path = astuple(card_spec)
             # Make sure the extension doesn't contain a ']' as that implies
             # we have something without extension using a config that contains
             # something with extension, e.g. [art=file.png]
@@ -97,31 +109,32 @@ def parse_render_spec(file_path: Path) -> RenderSpec:
             # Pretend this is a file right next to the spec and parse that
             full_card_path = file_path.parent / Path(spec).name
             card_info = parse_card_info(full_card_path)
-            if path is not None:
+            if path is not None and "art" not in card_info["additional_cfg"]:
                 card_info["additional_cfg"]["art"] = path
             cards.append(card_info)
 
         if "*" in spec_base:
             specs = glob.glob(spec_base, root_dir=parent_dir, recursive=True)
-            specs = [(s.split(".")[0], s) for s in specs if not s.endswith(".txt")]
+            specs = [
+                CardSpec(s.split(".")[0], s) for s in specs if not s.endswith(".txt")
+            ]
         elif os.path.exists(spec_base):
-            specs = [(spec_base.split(".")[0], spec_base)]
+            specs = [CardSpec(spec_base.split(".")[0], spec_base)]
         else:
-            specs = [(spec_base, None)]
+            specs = [CardSpec(spec_base, None)]
 
         used_configs = parts[1:]
         for c in used_configs:
             if c in configs:
-                config_spec = configs[c]["info"]
+                specs = [append_config(s, configs[c]) for s in specs]
             else:
-                config_spec = c
-            specs = [append_config(s, config_spec) for s in specs]
+                specs = [append_config(s, c) for s in specs]
 
         # If part of a group we need to just accumulate
         if groups:
             if l.startswith("}"):
                 # The group ended, so we assign this configuration to all the cards in it
-                group_spec = specs[0][0][1:].strip()
+                group_spec = specs[0].spec[1:].strip()
                 ended_group = groups.pop()
                 ended_group = [append_config(c, group_spec) for c in ended_group]
 
