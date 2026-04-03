@@ -2,6 +2,7 @@
 * CORE PROXYSHOP TEMPLATES
 """
 # Standard Library Imports
+import os
 import os.path as osp
 from contextlib import suppress
 from functools import cached_property
@@ -304,6 +305,10 @@ class BaseTemplate:
             sanitize_filename(name)
         ).with_suffix(f'.{CFG.output_file_type}')
 
+        if CFG.maintain_folder_structure and self.art_file.is_relative_to(PATH.ART):
+            relative_path = self.art_file.parent.relative_to(PATH.ART)
+            path = path.parent / relative_path / path.name
+
         # Are we overwriting duplicate names?
         if not CFG.overwrite_duplicate:
             path = get_unique_filename(path)
@@ -443,7 +448,7 @@ class BaseTemplate:
     @cached_property
     def is_art_vertical(self) -> bool:
         """bool: Returns True if art provided is vertically oriented, False if it is horizontal."""
-        with Image.open(self.layout.art_file) as image:
+        with Image.open(self.art_file) as image:
             width, height = image.size
         if height > (width * 1.1):
             # Vertical orientation
@@ -750,6 +755,19 @@ class BaseTemplate:
     * Loading Artwork
     """
 
+    @cached_property
+    def art_file(self) -> Path:
+        """Path to the art file to load."""
+        art_file = self.layout.file.get('additional_cfg', {}).get('art', None)
+        if art_file is not None:
+            art_file = Path(art_file)
+            if art_file.is_absolute():
+                return art_file
+            else:
+                return self.layout.art_file.parent / art_file
+        else:
+            return self.layout.art_file
+
     @property
     def art_action(self) -> Optional[Callable]:
         """Function that is called to perform an action on the imported art."""
@@ -769,7 +787,7 @@ class BaseTemplate:
         """Loads the specified art file into the specified layer.
 
         Args:
-            art_file: Optional path (as str or Path) to art file. Will use `self.layout.art_file`
+            art_file: Optional path (as str or Path) to art file. Will use `self.art_file`
                 if not provided.
             art_layer: Optional `ArtLayer` where art image should be placed when imported. Will use `self.art_layer`
                 property if not provided.
@@ -778,7 +796,7 @@ class BaseTemplate:
         """
 
         # Set default values
-        art_file = art_file or self.layout.art_file
+        art_file = art_file or self.art_file
         art_layer = art_layer or self.art_layer
         art_reference = art_reference or self.art_reference
 
@@ -1625,6 +1643,12 @@ class BaseTemplate:
         # Manual edit step?
         if CFG.exit_early and not ENV.TEST_MODE:
             self.console.await_choice(self.event)
+
+        # Make sure output folder exists
+        if CFG.maintain_folder_structure:
+            output_folder = self.output_file_name.parent
+            if not osp.exists(output_folder):
+                os.makedirs(output_folder)
 
         # Save the document
         if not self.run_tasks(

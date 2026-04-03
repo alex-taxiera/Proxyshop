@@ -15,6 +15,7 @@ from omnitils.strings import get_line, get_lines, normalize_str, strip_lines
 # Local Imports
 from src import CFG, CON, CONSOLE, ENV, PATH
 from src.cards import CardDetails, FrameDetails, get_card_data, parse_card_info, process_card_data
+from src.render_spec import parse_render_spec
 from src.console import msg_error, msg_success
 from src.utils.hexapi import get_watermark_svg, get_watermark_svg_from_set
 from src.utils.scryfall import get_cards_oracle
@@ -47,11 +48,11 @@ class PowerToughness(TypedDict):
 """
 
 
-def assign_layout(filename: Path) -> str | ForwardRef('CardLayout'):
-    """Assign layout object to a card.
+def assign_layout(filename: Path) -> str | ForwardRef('CardLayout') | list[ForwardRef('CardLayout')]:
+    """Assign layout objects to a input file.
 
     Args:
-        filename (Path): Path to the art file, filename supports optional tags.
+        filename (Path): Path to the art file or render spec, filename supports optional tags.
 
     Filename Tags:
         | Tag        | Description                                                   |
@@ -60,33 +61,69 @@ def assign_layout(filename: Path) -> str | ForwardRef('CardLayout'):
         | `[set]`    | Uses a specific set printing when fetching Scryfall data.     |
         | `{number}` | Uses a specific collector number when fetching Scryfall data. |
         | `$creator` | Must be at the end of filename, indicates the creator.        |
+        | `[k=v]`    | Arbitrary key-value pairs that a frame may or may not use.    |
 
     Returns:
-        str | CardLayout: Layout object for this card.
+        str | CardLayout | list[CardLayout]: Layout objects for this file (single object if it's a card, list of objects if it's a render spec).
     """
-    # Get basic card information
-    card = parse_card_info(filename)
-    name_failed = osp.basename(str(card.get('file', 'None')))
 
-    # Get scryfall data for the card
-    scryfall = get_card_data(card, cfg=CFG, logger=CONSOLE)
-    if not scryfall:
-        return msg_error(name_failed, reason="Scryfall search failed")
-    scryfall = process_card_data(scryfall, card)
+    if Path(filename).suffix == ".txt":
+        # .txt files declare a render spec, open and unwrap these seperately
+        spec = parse_render_spec(filename)
+        cards = spec['cards']
+    else:
+        # Otherwise it's a regular old card ...
+        # Get basic card information
+        cards = [parse_card_info(filename)]
 
-    # Instantiate layout object
-    if scryfall.get('layout', 'None') in layout_map:
-        try:
-            layout = layout_map[scryfall['layout']](scryfall, card)
-        except Exception as e:
-            # Couldn't instantiate layout object
-            CONSOLE.log_exception(e)
-            return msg_error(name_failed, reason="Layout generation failed")
-        if not ENV.TEST_MODE:
-            CONSOLE.update(f"{msg_success('FOUND:')} {str(layout)}")
-        return layout
-    # Couldn't find an appropriate layout
-    return msg_error(name_failed, reason="Layout incompatible")
+    def assign_layout_impl(card):
+        name_failed = osp.basename(str(card.get('file', 'None')))
+
+        # Get scryfall data for the card
+        scryfall = get_card_data(card, cfg=CFG, logger=CONSOLE)
+        if not scryfall:
+            return msg_error(name_failed, reason="Scryfall search failed")
+        scryfall = process_card_data(scryfall, card)
+
+        # Instantiate layout object
+        if scryfall.get('layout', 'None') in layout_map:
+            try:
+                layout = layout_map[scryfall['layout']](scryfall, card)
+            except Exception as e:
+                # Couldn't instantiate layout object
+                CONSOLE.log_exception(e)
+                return msg_error(name_failed, reason="Layout generation failed")
+            if not ENV.TEST_MODE:
+                CONSOLE.update(f"{msg_success('FOUND:')} {str(layout)}")
+            return layout
+
+        # Couldn't find an appropriate layout
+        return msg_error(name_failed, reason="Layout incompatible")
+    
+    # Assign layouts and return
+    layouts = list(map(assign_layout_impl, cards))
+    if len(layouts) == 1:
+        return layouts[0]
+    return layouts
+
+
+def flatten_cards(cards: list[Union[str, 'CardLayout', list['CardLayout']]]) -> list[str, 'CardLayout']:
+    """Utility that flattens a list of return values from assign_layout into a list of cards.
+    
+    Args:
+        cards: A list of values returned from assign_layout
+    
+    Returns:
+        A list of layout objects
+    """
+
+    def flatten_impl(list_or_obj):
+        if isinstance(list_or_obj, list):
+            return [nested_element for element in list_or_obj for nested_element in flatten_impl(element)]
+        else:
+            return [list_or_obj]
+
+    return flatten_impl(cards)
 
 
 def join_dual_card_layouts(layouts: list[Union[str, 'CardLayout']]):
@@ -377,6 +414,9 @@ class NormalLayout:
     @cached_property
     def symbol_code(self) -> str:
         """Code used to match a symbol to this card's set. Provided by hexproof.io."""
+        forced_symbol = self.file.get('additional_cfg', {}).get('sym', None)
+        if forced_symbol:
+            return forced_symbol.upper()
         if CFG.symbol_force_default:
             return CFG.symbol_default.upper()
         return self.set_data.get('code_symbol', 'DEFAULT').upper()
