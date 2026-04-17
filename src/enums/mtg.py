@@ -73,6 +73,7 @@ class LayoutScryfall(StrConstant):
     Class = 'class'
     Saga = 'saga'
     Adventure = 'adventure'
+    Prepare = 'prepare'
     Mutate = 'mutate'
     Prototype = 'prototype'
     Battle = 'battle'

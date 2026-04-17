@@ -1752,6 +1752,7 @@ layout_map: dict[str, Type[CardLayout]] = {
     LayoutScryfall.Class: ClassLayout,
     LayoutScryfall.Saga: SagaLayout,
     LayoutScryfall.Adventure: AdventureLayout,
+    LayoutScryfall.Prepare: AdventureLayout,
     LayoutScryfall.Mutate: MutateLayout,
     LayoutScryfall.Prototype: PrototypeLayout,
     LayoutScryfall.Battle: BattleLayout,
