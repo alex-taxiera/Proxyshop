@@ -44,7 +44,10 @@ class ScryfallError(TypedDict):
 """
 
 # Rate limiter to safely limit Scryfall requests
-scryfall_rate_limit = RateLimitDecorator(calls=20, period=1)
+scryfall_rate_limit = RateLimitDecorator(calls=10, period=1)
+
+# Rate limiter for search endpoints (stricter limit)
+scryfall_strict_rate_limit = RateLimitDecorator(calls=2, period=1)
 
 # Scryfall HTTP header
 scryfall_http_header = HEADERS.Default.copy()
@@ -93,22 +96,24 @@ class ScryfallException(RequestException):
         super().__init__(msg)
 
 
-def scryfall_request_wrapper(logr: Any = None) -> Callable:
+def scryfall_request_wrapper(logr: Any = None, rate_limit: Optional[RateLimitDecorator] = None) -> Callable:
     """Wrapper for a Scryfall request function to handle retries, rate limits, and a final exception catch.
 
     Args:
         logr: Logger object to output any exception messages.
+        rate_limit: Rate limit decorator to use. Defaults to scryfall_rate_limit (10/s).
 
     Returns:
         Wrapped function.
     """
     logr = logr or CONSOLE
+    limiter = rate_limit if rate_limit is not None else scryfall_rate_limit
 
     def decorator(func):
         @log_on_exception(logr)
         @on_exception(expo, requests.exceptions.RequestException, max_tries=2, max_time=1)
         @sleep_and_retry
-        @scryfall_rate_limit
+        @limiter
         def wrapper(*args, **kwargs):
             return func(*args, **kwargs)
         return wrapper
@@ -188,7 +193,7 @@ def get_card_unique(
         **params)
 
 
-@scryfall_request_wrapper()
+@scryfall_request_wrapper(rate_limit=scryfall_strict_rate_limit)
 def get_card_search(
     card_name: str,
     card_set: Optional[str] = None,
@@ -248,7 +253,7 @@ def get_card_search(
         lang=lang)
 
 
-@scryfall_request_wrapper()
+@scryfall_request_wrapper(rate_limit=scryfall_strict_rate_limit)
 @return_on_exception([])
 def get_cards_paged(
     url: Union[yarl.URL, ScryURL, None] = None,
@@ -284,7 +289,7 @@ def get_cards_paged(
     return cards
 
 
-@scryfall_request_wrapper()
+@scryfall_request_wrapper(rate_limit=scryfall_strict_rate_limit)
 @return_on_exception([])
 def get_cards_oracle(oracle_id: str, all_pages: bool = False, **kwargs) -> list[dict]:
     """Grab paginated card list from a Scryfall API endpoint using the Oracle ID of the card.
@@ -314,7 +319,7 @@ def get_cards_oracle(oracle_id: str, all_pages: bool = False, **kwargs) -> list[
 """
 
 
-@scryfall_request_wrapper()
+@scryfall_request_wrapper(rate_limit=scryfall_strict_rate_limit)
 @return_on_exception({})
 def get_set(card_set: str) -> dict:
     """Grab Set data from Scryfall.
