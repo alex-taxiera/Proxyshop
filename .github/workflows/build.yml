@@ -38,6 +38,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Vendor omnitils
+        shell: pwsh
+        run: |
+          $ref = Select-String -Path pyproject.toml -Pattern 'omnitils = \{ git = "https://github.com/pappnu/omnitils.git", rev = "([^"]+)" \}' | ForEach-Object { $_.Matches[0].Groups[1].Value }
+          if (-not $ref) { throw 'Could not determine omnitils ref from pyproject.toml.' }
+          New-Item -ItemType Directory -Path vendor -Force | Out-Null
+          git clone https://github.com/pappnu/omnitils.git vendor/omnitils
+          git -C vendor/omnitils checkout $ref
+
       - name: Build
         shell: pwsh
         run: |
