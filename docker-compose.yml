@@ -4,7 +4,7 @@ services:
       - .\src:C:\usr\src\app\src
     build:
       context: .
-    command: powershell.exe -C "Invoke-Expression (poetry env activate); pyinstaller -n Proxyshop --onefile main.py"
+    command: powershell.exe -C "python -m poetry run pyinstaller -n Proxyshop --onefile main.py"
 
 # run this command to build the exe
 # docker compose up --build
