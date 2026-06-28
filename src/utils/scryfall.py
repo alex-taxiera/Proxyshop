@@ -20,6 +20,9 @@ from src import CONSOLE, PATH
 from src.console import get_bullet_points
 from src.utils.download import HEADERS
 
+session = requests.Session()
+session.headers.update({"User-Agent": "Proxyshop/alex-taxiera/nightly"})
+
 """
 * Types
 """
@@ -178,7 +181,7 @@ def get_card_unique(
         'lang': lang}
 
     # Request the data
-    res = requests.get(url=url, headers=scryfall_http_header)
+    res = session.get(url=url, headers=scryfall_http_header)
     card = res.json()
 
     # Ensure playable card was returned
@@ -224,7 +227,7 @@ def get_card_search(
         Card dict or ScryfallException
     """
     # Query Scryfall
-    res = requests.get(
+    res = session.get(
         url=ScryURL.API.Cards.Search.with_query({
             'q': f'!"{card_name}"'
                  f' lang:{lang}'
@@ -271,7 +274,7 @@ def get_cards_paged(
     url = url or ScryURL.API.Cards.Search
 
     # Query Scryfall
-    req = requests.get(url=url.with_query(kwargs), headers=scryfall_http_header)
+    req = session.get(url=url.with_query(kwargs), headers=scryfall_http_header)
     res = req.json()
     cards = res.get('data', [])
 
@@ -331,7 +334,7 @@ def get_set(card_set: str) -> dict:
         Scryfall set dict or empty dict.
     """
     # Make the request
-    res = requests.get(
+    res = session.get(
         ScryURL.API.Cards.Search.SCRY_SETS / card_set.upper(),
         headers=scryfall_http_header)
     data = res.json()
@@ -358,7 +361,7 @@ def get_uri_object(url: yarl.URL, **kwargs) -> dict:
     Returns:
         A Scryfall object, e.g. Card, Set, etc.
     """
-    res = requests.get(url.with_query(kwargs), headers=scryfall_http_header)
+    res = session.get(url.with_query(kwargs), headers=scryfall_http_header)
     data = res.json()
 
     # Check for error object
@@ -381,7 +384,7 @@ def get_card_scan(img_url: str) -> Path:
     Raises:
         RequestException: If image couldn't be retrieved.
     """
-    res = requests.get(img_url, stream=True)
+    res = session.get(img_url, stream=True)
     if res.status_code != 200:
         raise RequestException(
             "Couldn't retrieve image from scryfall.",
