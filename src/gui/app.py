@@ -58,6 +58,7 @@ from src.gui.test import TestApp
 from src.layouts import (
     layout_map,
     assign_layout,
+    flatten_cards,
     join_dual_card_layouts,
     NormalLayout)
 from src.templates import BaseTemplate
@@ -426,8 +427,11 @@ class ProxyshopGUIApp(App):
         with ThreadPoolExecutor(max_workers=cpu_count()) as pool:
             cards = pool.map(assign_layout, files)
 
+            # Flatten results, which may contain lists
+            cards = flatten_cards(list(cards))
+
         # Join dual card layouts
-        cards = join_dual_card_layouts(list(cards))
+        cards = join_dual_card_layouts(cards)
 
         # Remove failed strings
         layouts: dict[str, dict[str, list[NormalLayout]]] = {}
